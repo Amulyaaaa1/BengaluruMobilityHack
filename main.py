@@ -11,9 +11,6 @@ cap=cv2.VideoCapture('highway.mp4')
 count=0
 tracker = Tracker()
 
-
-
-
 def POINTS(event, x, y, flags, param):
     if event == cv2.EVENT_MOUSEMOVE :  
         colorsBGR = [x, y]
@@ -47,10 +44,16 @@ while True:
     
     results=model(frame)
     list=[] #make a list 
+    cv2.putText(frame, "A", (207,75), cv2.FONT_HERSHEY_SIMPLEX, 1, (234, 123, 250), 2)
+    cv2.putText(frame, "B", (540,80), cv2.FONT_HERSHEY_SIMPLEX, 1, (234, 123, 250), 2)
+    cv2.putText(frame, "C", (22,120), cv2.FONT_HERSHEY_SIMPLEX, 1, (234, 123, 250), 2)
+    cv2.putText(frame, "D", (7,335), cv2.FONT_HERSHEY_SIMPLEX, 1, (234, 123, 250), 2)
+    cv2.putText(frame, "E", (845,332), cv2.FONT_HERSHEY_SIMPLEX, 1, (234, 123, 250), 2)
+    cv2.putText(frame, "F", (869,131), cv2.FONT_HERSHEY_SIMPLEX, 1, (234, 123, 250), 2)
     for index,rows in results.pandas().xyxy[0].iterrows():
        if rows['name'] == 'person':
             continue 
-       x=int(rows[0]) #xmin
+       x=int(rows[0]) #xmin     
        y=int(rows[1]) #ymin
        x1=int(rows[2]) #xmax
        y1=int(rows[3]) #ymax
