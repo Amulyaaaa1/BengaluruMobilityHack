@@ -2,10 +2,12 @@ import cv2
 import torch
 import numpy as np
 from tracker import *
+from collections import defaultdict
 
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 
 cap=cv2.VideoCapture('highway.mp4')
+track_history = defaultdict(lambda: [])
 
 count=0
 tracker = Tracker()
