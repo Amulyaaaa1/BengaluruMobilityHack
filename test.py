@@ -44,7 +44,7 @@ while cap.isOpened():
     if not success:
         break
     count += 1
-    if count % 3 != 0:
+    if count % 4 != 0:
         continue
 
     frame = cv2.resize(frame, (1020, 600))
@@ -84,26 +84,29 @@ while cap.isOpened():
         x_center = int(x_center)
         y_center = int(y_center)
         bottom_left = (int(x_center - width / 2), int(y_center + height / 2))
+        center = (x_center, y_center)
         track_id = int(track_id)
 
         # Draw the center point of the object
         cv2.circle(annotated_frame, bottom_left, 4, (0, 255, 0), -1)
+        cv2.circle(annotated_frame, center, 4, (0, 255, 0), -1)
 
         # Check if the center point is inside any area
-        result_A = cv2.pointPolygonTest(np.array(areaA, np.int32), bottom_left, False)
-        result_B = cv2.pointPolygonTest(np.array(areaB, np.int32), bottom_left, False)
-        result_C = cv2.pointPolygonTest(np.array(areaC, np.int32), bottom_left, False)
-        result_D = cv2.pointPolygonTest(np.array(areaD, np.int32), bottom_left, False)
-        result_E = cv2.pointPolygonTest(np.array(areaE, np.int32), bottom_left, False)
-        result_F = cv2.pointPolygonTest(np.array(areaF, np.int32), bottom_left, False)
+        result_A = cv2.pointPolygonTest(np.array(areaA, np.int32), bottom_left, False) or cv2.pointPolygonTest(np.array(areaA, np.int32), center, False)
+        result_B = cv2.pointPolygonTest(np.array(areaB, np.int32), bottom_left, False) or cv2.pointPolygonTest(np.array(areaB, np.int32), center, False)
+        result_C = cv2.pointPolygonTest(np.array(areaC, np.int32), bottom_left, False) or cv2.pointPolygonTest(np.array(areaC, np.int32), center, False) 
+        result_D = cv2.pointPolygonTest(np.array(areaD, np.int32), bottom_left, False) or cv2.pointPolygonTest(np.array(areaD, np.int32), center, False)
+        result_E = cv2.pointPolygonTest(np.array(areaE, np.int32), bottom_left, False) or cv2.pointPolygonTest(np.array(areaE, np.int32), center, False)
+        result_F = cv2.pointPolygonTest(np.array(areaF, np.int32), bottom_left, False) or cv2.pointPolygonTest(np.array(areaF, np.int32), center, False)
+    
 
         # Update area sets and route counts based on object movement
         if result_A > 0:
-            if track_id in area_E:
+            if track_id in area_E or track_id in area_F:
                 route_dict["EA"] += 1
             if track_id in area_C:
                 route_dict["CA"] += 1
-            area_A.add(track_id)
+            # area_A.add(track_id)
         if result_B > 0:
             area_B.add(track_id)
         if result_C > 0:
@@ -111,9 +114,11 @@ while cap.isOpened():
                 route_dict["BC"] += 1
             area_C.add(track_id)
         if result_D > 0:
-            if track_id in area_E:
+            if track_id in area_E or track_id in area_F:
                 route_dict["ED"] += 1
-            area_D.add(track_id)
+            if track_id in area_B:
+                route_dict["BC"] += 1
+            # area_D.add(track_id)
         if result_E > 0:
             area_E.add(track_id)
         if result_F > 0:
