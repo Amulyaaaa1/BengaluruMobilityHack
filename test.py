@@ -10,6 +10,8 @@ model = YOLO('yolov8n.pt')  # Changed to YOLOv8 for consistency
 count = 0
 cap = cv2.VideoCapture('highway.mp4')
 track_history = defaultdict(lambda: [])
+car_count = bus_count = bicycle_count = motorcycle_count = 0
+car_ids = bus_ids = bicycle_ids = motorcycle_ids = []
 
 # Define routes and their counts
 route_dict = {
@@ -68,7 +70,7 @@ while cap.isOpened():
         if track_ids is not None:
             track_ids = results[0].boxes.id.int().cpu().tolist()
         else:
-            track_ids = []
+            track_ids = []    
     else:
         boxes = []
         track_ids = []
@@ -80,6 +82,21 @@ while cap.isOpened():
     for box, track_id, class_ids in zip(boxes, track_ids, class_ids):
         if class_ids == 0:
             continue
+        track_id = int(track_id)
+        if class_ids is not None:
+            print(class_ids)
+            if class_ids == 2 and track_id not in car_ids:
+                car_count+=1
+                car_ids.append(track_id)
+            elif class_ids == 1 and track_id not in bicycle_ids:
+                bicycle_count += 1
+                bicycle_ids.append(track_id)
+            elif class_ids == 3 and track_id not in motorcycle_ids:
+                motorcycle_count += 1
+                motorcycle_ids.append(track_id)
+            elif class_ids == 5 and track_id not in bus_ids:
+                bus_count+=1
+                bus_ids.append(track_id)
         x_center, y_center, width, height = box
         x_center = int(x_center)
         y_center = int(y_center)
@@ -155,3 +172,10 @@ cv2.destroyAllWindows()
 # Print the route counts
 for key, value in route_dict.items():
     print(f"Route {key}: {value}")
+    
+
+        
+print(f"The number of cars is {car_count}")
+print(f"The number of buses is {bus_count}")
+print(f"The number of bikes is {motorcycle_count}")
+print(f"The number of bicycles is {bicycle_count}")
