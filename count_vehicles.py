@@ -85,7 +85,7 @@ def get_vehicle_count(video, start_minute):
                     elif vehicle_type == "bus" and track_id not in bus_ids:
                         bus_count[current_minute]+=1
                         bus_ids.append(track_id)
-                    elif vehicle_type == "person":
+                    elif vehicle_type == "person" and track_id not in motorcycle_ids:
                         motorcycle_count[current_minute] += 1
                         motorcycle_ids.append(track_id)
 
@@ -99,8 +99,8 @@ def get_vehicle_count(video, start_minute):
             
     # Print the vehicle counts for each minute
     for i in range(15):
-        print(f"Minute {real_time + i}: Cars: {car_count[i]}, Buses: {bus_count[i]}, Motorcycles: {motorcycle_count[i]}, Bicycles: {bicycle_count[i]}")
-        semi_final_counts.append([real_time + i, car_count[i], bus_count[i], motorcycle_count[i], bicycle_count[i]])
+        print(f"Minute {start_minute+i+1}: Cars: {car_count[i]}, Buses: {bus_count[i]}, Motorcycles: {motorcycle_count[i]}, Bicycles: {bicycle_count[i]}")
+        semi_final_counts.append([start_minute+i+1, car_count[i], bus_count[i], motorcycle_count[i], bicycle_count[i]])
     
     return semi_final_counts
  
@@ -129,10 +129,10 @@ for file in os.listdir("2024-05-15"):
     if file.endswith(".mp4"):
         Videos.append(os.path.join("2024-05-15", file))
 cv2.namedWindow('FRAME')
-time_offset = 0
+time_offset = 90
 Videos.sort()
 
-for video in Videos[0:2]:
+for video in Videos[6:]:
     print(video)
     semi_final_count = get_vehicle_count(video, time_offset)
     time_offset += 15
