@@ -660,7 +660,7 @@ route_dict = {
 
 # YOLOv8 class indices mapped to vehicle types
 class_map = {2: "car", 5: "bus", 3: "motorcycle", 7: "suv", 8: "3-wheeler"}
-car[15],
+
 cv2.namedWindow('FRAME')
 
 # Define areas as polylines with their coordinates
@@ -772,7 +772,8 @@ print("\nTotal vehicle counts:")
 for vehicle_type, count in tracked_vehicles.items():
     print(f"{vehicle_type.capitalize()}: {len(count)}")'''
 #YOLO v8
-'''import cv2
+'''
+import cv2
 import torch
 import numpy as np
 from collections import defaultdict
@@ -875,6 +876,7 @@ print("\nTotal vehicle counts:")
 for vehicle, count in vehicle_counts.items():
     print(f"{vehicle.capitalize()}: {count}")
 '''
+
 #Minute wise
 '''import cv2
 import torch
@@ -979,9 +981,10 @@ cv2.destroyAllWindows()
 # Print the vehicle counts for each minute
 for i in range(15):
     print(f"Minute {i + 1}: Cars: {car[i]}, Buses: {bus[i]}, SUVs: {SUV[i]}, Motorcycles: {motorcycle[i]}, 3-Wheelers: {three_wheelers[i]}")
+
 '''
-#Vehicle type
-import cv2
+#high
+'''import cv2
 import torch
 import numpy as np
 from collections import defaultdict
@@ -992,31 +995,20 @@ import time
 model = YOLO('yolov8n.pt')
 
 # Open the video file
-cap = cv2.VideoCapture('highway.mp4')
+cap = cv2.VideoCapture('high.mp4')
 
 # Initialize arrays for vehicle counts (15 minutes)
 car = [0] * 15
 bus = [0] * 15
-truck = [0] * 15
-two_wheeler = [0] * 15
-lcv = [0] * 15
-bicycle = [0] * 15
-three_wheeler=[0]*15
+SUV = [0] * 15
+motorcycle = [0] * 15
+three_wheelers = [0] * 15
 
-# Track unique IDs for each vehicle type
-tracked_vehicles = defaultdict(set)
+# Track vehicle IDs per minute
+tracked_ids_per_minute = defaultdict(set)
 
-# Define YOLOv8 class indices mapped to vehicle types
-# You may need to adjust these indices based on your model's output classes
-class_map = {
-    2: "car",       # Adjust index if necessary
-    5: "bus",       # Adjust index if necessary
-    7: "truck",     # Adjust index if necessary
-    3: "two-wheeler", # Adjust index if necessary
-    0: "lcv",       # Adjust index if necessary
-    1: "bicycle" , 
-    8: "three_wheeler"  # Adjust index if necessary
-}
+# YOLOv8 class indices mapped to vehicle types
+class_map = {2: "car", 5: "bus", 3: "motorcycle", 7: "suv", 8: "3-wheeler"}
 
 # Define areas as polylines with their coordinates
 areaA = [(207, 77), (515, 85), (507, 103), (173, 105)]
@@ -1055,36 +1047,34 @@ while cap.isOpened():
     else:
         boxes, track_ids, class_ids = [], [], []
 
-    # Process each detected object
-    for box, track_id, class_id in zip(boxes, track_ids, class_ids):
-        # Skip non-relevant classes
-        if class_id not in class_map:
-            continue
-        
-        # Determine the vehicle type
-        vehicle_type = class_map[class_id]
-        
-        # Track the unique vehicle
-        tracked_vehicles[vehicle_type].add(track_id)
-
-        # Increment count based on vehicle type and current minute
-        elapsed_time = time.time() - start_time
-        current_minute = int(elapsed_time // 60)
-        if current_minute < 15:
-            if vehicle_type == "car":
-                car[current_minute] += 1
-            elif vehicle_type == "bus":
-                bus[current_minute] += 1
-            elif vehicle_type == "truck":
-                truck[current_minute] += 1
-            elif vehicle_type == "two-wheeler":
-                two_wheeler[current_minute] += 1
-            elif vehicle_type == "lcv":
-                lcv[current_minute] += 1
-            elif vehicle_type == "bicycle":
-                bicycle[current_minute] += 1
-            elif vehicle_type == "three_wheeler":
-                three_wheeler[current_minute] += 1
+    # Current minute
+    elapsed_time = time.time() - start_time
+    current_minute = int(elapsed_time // 60)
+    
+    if current_minute < 15:
+        for box, track_id, class_id in zip(boxes, track_ids, class_ids):
+            # Skip non-relevant classes
+            if class_id not in class_map:
+                continue
+            
+            # Determine the vehicle type
+            vehicle_type = class_map[class_id]
+            
+            # Check if the vehicle ID has already been tracked this minute
+            if track_id not in tracked_ids_per_minute[current_minute]:
+                tracked_ids_per_minute[current_minute].add(track_id)
+                
+                # Increment count based on vehicle type
+                if vehicle_type == "car":
+                    car[current_minute] += 1
+                elif vehicle_type == "bus":
+                    bus[current_minute] += 1
+                elif vehicle_type == "suv":
+                    SUV[current_minute] += 1
+                elif vehicle_type == "motorcycle":
+                    motorcycle[current_minute] += 1
+                elif vehicle_type == "3-wheeler":
+                    three_wheelers[current_minute] += 1
 
     # Display the annotated frame
     cv2.imshow("FRAME", frame)
@@ -1096,4 +1086,352 @@ cv2.destroyAllWindows()
 
 # Print the vehicle counts for each minute
 for i in range(15):
-    print(f"Minute {i + 1}: Cars: {car[i]}, Buses: {bus[i]}, Trucks: {truck[i]}, Two-Wheelers: {two_wheeler[i]}, LCVs: {lcv[i]}, Bicycles: {bicycle[i]}")
+    print(f"Minute {i + 1}: Cars: {car[i]}, Buses: {bus[i]}, SUVs: {SUV[i]}, Motorcycles: {motorcycle[i]}, 3-Wheelers: {three_wheelers[i]}")
+
+'''
+#CSV
+import cv2
+import torch
+import numpy as np
+from collections import defaultdict
+from ultralytics import YOLO
+
+# Load the YOLOv8 model
+model = YOLO('yolov8n.pt')
+
+# Open the video file
+cap = cv2.VideoCapture('edited2.mp4')
+
+# Vehicle counts for the total across all junctions
+vehicle_counts_total = defaultdict(int)
+
+# Track unique IDs for each vehicle type per junction
+tracked_vehicles_per_junction = {
+    "EA": defaultdict(set),
+    "CA": defaultdict(set),
+    "BC": defaultdict(set),
+    "ED": defaultdict(set),
+    "BF": defaultdict(set),
+    "CF": defaultdict(set),
+}
+
+# YOLOv8 class indices mapped to vehicle types
+class_map = {2: "car", 5: "bus", 7: "truck", 3: "two-wheeler", 0: "lcv", 1: "bicycle", 8: "three-wheeler"}
+
+# Define areas as polylines with their coordinates
+areaA=[(207,77),(515,85),(507,103),(173,105)]
+areaB=[(540,82),(778,105),(829,132),(527,107)]
+areaC=[(22,122),(7,335),(85,335),(163,99)]
+areaD=[(7,337),(6,593),(121,595),(130,339)]
+areaE=[(845,334),(868,598),(1010,594),(1006,337)]
+areaF=[(869,133),(998,154),(1014,302),(884,302)]
+# Initialize window
+cv2.namedWindow('FRAME')
+
+while cap.isOpened():
+    success, frame = cap.read()
+    if not success:
+        break
+
+    frame = cv2.resize(frame, (1020, 600))
+
+    # Draw polylines for each area
+    cv2.polylines(frame, [np.array(areaA, np.int32)], True, (0, 255, 255), 2)
+    cv2.polylines(frame, [np.array(areaB, np.int32)], True, (0, 255, 255), 2)
+    cv2.polylines(frame, [np.array(areaC, np.int32)], True, (0, 255, 255), 2)
+    cv2.polylines(frame, [np.array(areaD, np.int32)], True, (0, 255, 255), 2)
+    cv2.polylines(frame, [np.array(areaE, np.int32)], True, (0, 255, 255), 2)
+    cv2.polylines(frame, [np.array(areaF, np.int32)], True, (0, 255, 255), 2)
+
+    # Run YOLOv8 tracking on the frame
+    results = model.track(frame, persist=True, verbose=False)
+
+    # Get the boxes, track IDs, and class IDs
+    if len(results) > 0 and results[0].boxes is not None:
+        boxes = results[0].boxes.xywh.cpu().numpy()
+        track_ids = results[0].boxes.id.int().cpu().tolist() if results[0].boxes.id is not None else []
+        class_ids = results[0].boxes.cls.cpu().tolist()
+    else:
+        boxes, track_ids, class_ids = [], [], []
+
+    # Process each detected object
+    for box, track_id, class_id in zip(boxes, track_ids, class_ids):
+        # Skip non-relevant classes
+        if class_id not in class_map:
+            continue
+        
+        # Determine the vehicle type
+        vehicle_type = class_map[class_id]
+        
+        # Track the unique vehicle for the total count
+        if track_id not in vehicle_counts_total:
+            vehicle_counts_total[vehicle_type] += 1
+        
+        # Process for each junction
+        x_center, y_center, width, height = box
+        bottom_left = (int(x_center - width / 2), int(y_center + height / 2))
+
+        # Check if the center point is inside any area and update junction counts
+        for junction, area in [("EA", areaA), ("CA", areaB), ("BC", areaC), ("ED", areaD), ("BF", areaE), ("CF", areaF)]:
+            if cv2.pointPolygonTest(np.array(area, np.int32), bottom_left, False) > 0:
+                if track_id not in tracked_vehicles_per_junction[junction][vehicle_type]:
+                    tracked_vehicles_per_junction[junction][vehicle_type].add(track_id)
+
+    # Display the annotated frame
+    cv2.imshow("FRAME", frame)
+    if cv2.waitKey(6) & 0xFF == 27:
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+
+# Print total vehicle counts
+print("Total vehicle counts across all junctions:")
+for vehicle_type, count in vehicle_counts_total.items():
+    print(f"{vehicle_type.capitalize()}: {count}")
+
+# Print vehicle counts per junction
+print("\nVehicle counts at each junction:")
+for junction, vehicle_dict in tracked_vehicles_per_junction.items():
+    print(f"Junction {junction}:")
+    for vehicle_type in class_map.values():
+        print(f"  {vehicle_type.capitalize()}: {len(vehicle_dict[vehicle_type])}")
+
+#Append CSV file
+'''import cv2
+import torch
+import numpy as np
+from collections import defaultdict
+from ultralytics import YOLO
+import csv
+
+# Load the YOLOv8 model
+model = YOLO('yolov8n.pt')
+
+# Open the video file
+cap = cv2.VideoCapture('edited2.mp4')
+
+# Vehicle counts for the total across all junctions
+vehicle_counts_total = defaultdict(int)
+
+# Track unique IDs for each vehicle type per junction
+tracked_vehicles_per_junction = {
+    "EA": defaultdict(set),
+    "CA": defaultdict(set),
+    "BC": defaultdict(set),
+    "ED": defaultdict(set),
+    "BF": defaultdict(set),
+    "CF": defaultdict(set),
+}
+
+# YOLOv8 class indices mapped to vehicle types
+class_map = {2: "car", 5: "bus", 7: "truck", 3: "two-wheeler", 0: "lcv", 1: "bicycle", 8: "three-wheeler"}
+
+# Define areas as polylines with their coordinates
+areaA = [(207, 77), (515, 85), (507, 103), (173, 105)]
+areaB = [(540, 82), (778, 105), (829, 132), (527, 107)]
+areaC = [(22, 122), (7, 335), (85, 335), (163, 99)]
+areaD = [(7, 337), (6, 593), (121, 595), (130, 339)]
+areaE = [(845, 334), (868, 598), (1010, 594), (1006, 337)]
+areaF = [(869, 133), (998, 154), (1014, 302), (884, 302)]
+
+# Initialize window
+cv2.namedWindow('FRAME')
+
+while cap.isOpened():
+    success, frame = cap.read()
+    if not success:
+        break
+
+    frame = cv2.resize(frame, (1020, 600))
+
+    # Draw polylines for each area
+    cv2.polylines(frame, [np.array(areaA, np.int32)], True, (0, 255, 255), 2)
+    cv2.polylines(frame, [np.array(areaB, np.int32)], True, (0, 255, 255), 2)
+    cv2.polylines(frame, [np.array(areaC, np.int32)], True, (0, 255, 255), 2)
+    cv2.polylines(frame, [np.array(areaD, np.int32)], True, (0, 255, 255), 2)
+    cv2.polylines(frame, [np.array(areaE, np.int32)], True, (0, 255, 255), 2)
+    cv2.polylines(frame, [np.array(areaF, np.int32)], True, (0, 255, 255), 2)
+
+    # Run YOLOv8 tracking on the frame
+    results = model.track(frame, persist=True, verbose=False)
+
+    # Get the boxes, track IDs, and class IDs
+    if len(results) > 0 and results[0].boxes is not None:
+        boxes = results[0].boxes.xywh.cpu().numpy()
+        track_ids = results[0].boxes.id.int().cpu().tolist() if results[0].boxes.id is not None else []
+        class_ids = results[0].boxes.cls.cpu().tolist()
+    else:
+        boxes, track_ids, class_ids = [], [], []
+
+    # Process each detected object
+    for box, track_id, class_id in zip(boxes, track_ids, class_ids):
+        # Skip non-relevant classes
+        if class_id not in class_map:
+            continue
+        
+        # Determine the vehicle type
+        vehicle_type = class_map[class_id]
+        
+        # Track the unique vehicle for the total count
+        if track_id not in vehicle_counts_total:
+            vehicle_counts_total[vehicle_type] += 1
+        
+        # Process for each junction
+        x_center, y_center, width, height = box
+        bottom_left = (int(x_center - width / 2), int(y_center + height / 2))
+
+        # Check if the center point is inside any area and update junction counts
+        for junction, area in [("EA", areaA), ("CA", areaB), ("BC", areaC), ("ED", areaD), ("BF", areaE), ("CF", areaF)]:
+            if cv2.pointPolygonTest(np.array(area, np.int32), bottom_left, False) > 0:
+                if track_id not in tracked_vehicles_per_junction[junction][vehicle_type]:
+                    tracked_vehicles_per_junction[junction][vehicle_type].add(track_id)
+
+    # Display the annotated frame
+    cv2.imshow("FRAME", frame)
+    if cv2.waitKey(6) & 0xFF == 27:
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+
+# Prepare data for CSV
+csv_data = [["Turning Patterns", "Car", "Bus", "Truck", "Three-Wheeler", "Two-Wheeler", "LCV", "Bicycle"]]
+for junction in tracked_vehicles_per_junction.keys():
+    row = [junction]
+    for vehicle_type in ["car", "bus", "truck", "three-wheeler", "two-wheeler", "lcv", "bicycle"]:
+        row.append(len(tracked_vehicles_per_junction[junction][vehicle_type]))
+    csv_data.append(row)
+
+# Save data to CSV file
+csv_file_path = '/Users/anaghamadhusoodhana/Desktop/BengaluruMobilityHack-aldrin 2/vehicle_counts.csv'
+with open(csv_file_path, 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerows(csv_data)
+
+print(f"Data saved to {csv_file_path}")'''
+
+#CSV correct number
+'''import cv2
+import torch
+import numpy as np
+from collections import defaultdict
+from ultralytics import YOLO
+import csv
+
+# Load the YOLOv8 model
+model = YOLO('yolov8n.pt')
+
+# Open the video file
+cap = cv2.VideoCapture('edited2.mp4')
+
+# Vehicle counts for the total across all junctions
+vehicle_counts_total = defaultdict(int)
+
+# Track unique IDs for each vehicle type per junction
+tracked_vehicles_per_junction = {
+    "EA": defaultdict(set),
+    "CA": defaultdict(set),
+    "BC": defaultdict(set),
+    "ED": defaultdict(set),
+    "BF": defaultdict(set),
+    "CF": defaultdict(set),
+}
+
+# YOLOv8 class indices mapped to vehicle types
+class_map = {2: "car", 5: "bus", 7: "truck", 3: "two-wheeler", 0: "lcv", 1: "bicycle", 8: "three-wheeler"}
+
+# Define areas as polylines with their coordinates
+areas = {
+    "EA": [(207, 77), (515, 85), (507, 103), (173, 105)],
+    "CA": [(540, 82), (778, 105), (829, 132), (527, 107)],
+    "BC": [(22, 122), (7, 335), (85, 335), (163, 99)],
+    "ED": [(7, 337), (6, 593), (121, 595), (130, 339)],
+    "BF": [(845, 334), (868, 598), (1010, 594), (1006, 337)],
+    "CF": [(869, 133), (998, 154), (1014, 302), (884, 302)]
+}
+
+# Initialize window
+cv2.namedWindow('FRAME')
+
+while cap.isOpened():
+    success, frame = cap.read()
+    if not success:
+        break
+
+    frame = cv2.resize(frame, (1020, 600))
+
+    # Draw polylines for each area
+    for junction, area in areas.items():
+        cv2.polylines(frame, [np.array(area, np.int32)], True, (0, 255, 255), 2)
+
+    # Run YOLOv8 tracking on the frame
+    results = model.track(frame, persist=True, verbose=False)
+
+    # Get the boxes, track IDs, and class IDs
+    if len(results) > 0 and results[0].boxes is not None:
+        boxes = results[0].boxes.xywh.cpu().numpy()
+        track_ids = results[0].boxes.id.int().cpu().tolist() if results[0].boxes.id is not None else []
+        class_ids = results[0].boxes.cls.cpu().tolist()
+    else:
+        boxes, track_ids, class_ids = [], [], []
+
+    # Process each detected object
+    for box, track_id, class_id in zip(boxes, track_ids, class_ids):
+        # Skip non-relevant classes
+        if class_id not in class_map:
+            continue
+        
+        # Determine the vehicle type
+        vehicle_type = class_map[class_id]
+        
+        # Track the unique vehicle for the total count
+        if track_id not in tracked_vehicles_per_junction["EA"][vehicle_type]:
+            vehicle_counts_total[vehicle_type] += 1
+        
+        # Process for each junction
+        x_center, y_center, width, height = box
+        bottom_left = (int(x_center - width / 2), int(y_center + height / 2))
+
+        # Check if the center point is inside any area and update junction counts
+        for junction, area in areas.items():
+            if cv2.pointPolygonTest(np.array(area, np.int32), bottom_left, False) > 0:
+                if track_id not in tracked_vehicles_per_junction[junction][vehicle_type]:
+                    tracked_vehicles_per_junction[junction][vehicle_type].add(track_id)
+                    # Draw bounding box and ID for debugging
+                    cv2.rectangle(frame, (int(x_center - width / 2), int(y_center - height / 2)),
+                                  (int(x_center + width / 2), int(y_center + height / 2)), (0, 255, 0), 2)
+                    cv2.putText(frame, f"{vehicle_type} ID:{track_id}", (int(x_center - width / 2), int(y_center - height / 2) - 10),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+    # Display the annotated frame
+    cv2.imshow("FRAME", frame)
+    if cv2.waitKey(6) & 0xFF == 27:
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+
+# Prepare data for CSV
+csv_data = [["Turning Patterns", "Car", "Bus", "Truck", "Three-Wheeler", "Two-Wheeler", "LCV", "Bicycle", "Total"]]
+for junction in tracked_vehicles_per_junction.keys():
+    row = [junction]
+    for vehicle_type in ["car", "bus", "truck", "three-wheeler", "two-wheeler", "lcv", "bicycle"]:
+        row.append(len(tracked_vehicles_per_junction[junction][vehicle_type]))
+    row.append(sum(len(tracked_vehicles_per_junction[junction][vt]) for vt in ["car", "bus", "truck", "three-wheeler", "two-wheeler", "lcv", "bicycle"]))
+    csv_data.append(row)
+
+# Add total counts to CSV
+total_row = ["Total"]
+for vehicle_type in ["car", "bus", "truck", "three-wheeler", "two-wheeler", "lcv", "bicycle"]:
+    total_row.append(vehicle_counts_total[vehicle_type])
+csv_data.append(total_row)
+
+# Save data to CSV file
+csv_file_path = '/Users/anaghamadhusoodhana/Desktop/BengaluruMobilityHack-aldrin 2/vehicle_counts.csv'
+with open(csv_file_path, 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerows(csv_data)
+
+print(f"Data saved to {csv_file_path}")
+'''
