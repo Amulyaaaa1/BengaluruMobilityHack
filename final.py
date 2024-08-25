@@ -1,3 +1,139 @@
+# import cv2
+# import torch
+# import numpy as np
+# from collections import defaultdict
+# from ultralytics import YOLO
+# import os
+# import time
+# import json
+# from dictionary import *
+
+
+# def get_vehicle_count(video, start_seconds):
+#     cap = cv2.VideoCapture(video)
+#     count = 0
+
+#     # Lists to keep track of vehicle counts for each 15-second interval
+#     car_count_15 = [0] * 60
+#     bus_count_15 = [0] * 60
+#     bicycle_count_15 = [0] * 60
+#     motorcycle_count_15 = [0] * 60
+#     lcv_count_15 = [0] * 60
+#     truck_count_15 = [0] * 60
+#     auto_count_15 = [0] * 60
+#     car_ids, bus_ids, bicycle_ids, motorcycle_ids, lcv_ids, truck_ids, auto_ids = [], [], [], [], [], [], []
+    
+#     tracked_ids_per_15s = defaultdict(set)
+    
+#     while cap.isOpened():
+#         success, frame = cap.read()
+#         if not success:
+#             break
+#         count += 1
+#         if count % 4 != 0:
+#             continue
+
+#         frame = cv2.resize(frame, (1020, 600))
+        
+#         # Run YOLOv8 tracking on the frame
+#         results = model.track(frame, persist=True, verbose=False)
+
+#         if len(results) > 0 and results[0].boxes is not None:
+#             boxes = results[0].boxes.xywh.cpu().numpy()
+#             track_ids = results[0].boxes.id.int().cpu().tolist() if results[0].boxes.id is not None else []
+#             class_ids = results[0].boxes.cls.cpu().tolist()
+#         else:
+#             boxes, track_ids, class_ids = [], [], []
+            
+#         annotated_frame = results[0].plot() if len(results) > 0 else frame.copy()
+        
+#         fps = cap.get(cv2.CAP_PROP_FPS)  # Get video FPS
+#         frame_count = int(cap.get(cv2.CAP_PROP_POS_FRAMES))  # Get current frame count
+#         elapsed_time = frame_count / fps
+#         current_seconds = int(elapsed_time)
+#         current_seconds_15 = current_seconds // 15  # Get the current 15-second interval
+        
+#         if current_seconds_15 < 60:
+#             for box, track_id, class_id in zip(boxes, track_ids, class_ids):
+#                 if class_id not in class_map:
+#                     continue
+                
+#                 x_center, y_center, width, height = box
+#                 x_center = int(x_center)
+#                 y_center = int(y_center)
+#                 bottom_left = (int(x_center - width / 2), int(y_center + height / 2))
+#                 center = (x_center, y_center)
+#                 track_id = int(track_id)
+#                 vehicle_type = class_map[class_id]
+                
+#                 # Draw the center point of the object
+#                 cv2.circle(annotated_frame, bottom_left, 4, (0, 255, 0), -1)
+#                 cv2.circle(annotated_frame, center, 4, (0, 255, 0), -1)
+                
+#                 for i in range(len(total_boxes)):
+#                     globals()["result"+"_"+boxes_possible[i]] = cv2.pointPolygonTest(np.array(required_coords[list(required_coords.keys())[i]], np.int32), bottom_left, False) or cv2.pointPolygonTest(np.array(required_coords[list(required_coords.keys())[i]], np.int32), center, False)
+
+                    
+#                 if track_id not in tracked_ids_per_15s[current_seconds_15]:
+#                     tracked_ids_per_15s[current_seconds_15].add(track_id)
+                    
+#                     if (vehicle_type == "car" or vehicle_type == "suv") and track_id not in car_ids:
+#                         car_count[current_seconds_15] += 1
+#                         car_ids.append(track_id)
+#                     elif vehicle_type == "bicycle" and track_id not in bicycle_ids:
+#                         bicycle_count[current_seconds_15] += 1
+#                         bicycle_ids.append(track_id)
+#                     elif vehicle_type == "motorcycle" and track_id not in motorcycle_ids:
+#                         motorcycle_count[current_seconds_15] += 1
+#                         motorcycle_ids.append(track_id)
+#                     elif vehicle_type == "bus" and track_id not in bus_ids:
+#                         bus_count[current_seconds_15] += 1
+#                         bus_ids.append(track_id)
+#                     elif vehicle_type == "person" and track_id not in motorcycle_ids:
+#                         motorcycle_count[current_seconds_15] += 1
+#                         motorcycle_ids.append(track_id)
+
+#         if cv2.waitKey(1) & 0xFF == 27:
+#             break
+
+#     cap.release()
+#     cv2.destroyAllWindows()
+
+#     semi_final_counts = []
+#     for i in range(60):
+#         second_offset = start_seconds + (i * 15)
+#         semi_final_counts.append([second_offset, car_count[i], bus_count[i], motorcycle_count[i], bicycle_count[i]])
+#         print(f"Seconds: {second_offset}, Cars: {car_count[i]}, Buses: {bus_count[i]}, Motorcycles: {motorcycle_count[i]}, Bicycles: {bicycle_count[i]}")
+    
+#     return semi_final_counts
+
+
+# # Load the YOLOv8 model
+# model = YOLO('best (2).pt')
+
+# Final_counts = [["Seconds", "Cars", "Buses", "Motorcycles", "Bicycles"]]
+
+# # YOLOv8 class indices mapped to vehicle types
+# # class_map = {2: "car", 5: "bus", 3: "motorcycle", 7: "suv", 1: "bicycle", 0: "person"}
+# class_map = {0: "bus", 1: "car", 2: "lcv", 3: "three-wheeler", 4: "two-wheeler", 5: "truck", 6: "vehicle"}
+
+# Videos = []
+# for file in os.listdir("2024-05-15"):
+#     if file.endswith(".mp4"):
+#         Videos.append(os.path.join("2024-05-15", file))
+# cv2.namedWindow('FRAME')
+# time_offset = 1800
+# Videos.sort()
+
+# time_offset = 0
+# for video in Videos[2:3]:
+#     print(video)
+#     semi_final_count = get_vehicle_count(video, time_offset)
+#     time_offset += 900  # Increment by 900 seconds (15 minutes)
+#     Final_counts.extend(semi_final_count)
+
+# print(Final_counts)
+
 import cv2
 import torch
 import numpy as np
@@ -82,21 +218,7 @@ def Get_outputs(video):
                 globals()["result"+"_"+boxes_possible[i]] = cv2.pointPolygonTest(np.array(required_coords[list(required_coords.keys())[i]], np.int32), bottom_left, False) or cv2.pointPolygonTest(np.array(required_coords[list(required_coords.keys())[i]], np.int32), center, False)
             
             
-            # for i in range(len(total_boxes)):
-            #     for j in range(i+1, len(total_boxes)):
-            #         if globals()["result"+"_"+boxes_possible[i]]>0:
-            #             globals()["area"+"_"+boxes_possible[i]].add(track_id)
-            #             if track_id in globals()["area"+"_"+boxes_possible[j]]:
-            #                 # globals()["area"+"_"+boxes_possible[j]].remove(track_id)
-            #                 route_dict[boxes_possible[j]+boxes_possible[i]] += 1
-            # for i in range(len(total_boxes)):         
-            #     if globals()["result"+"_"+boxes_possible[i]]>0:
-            #         globals()["area"+"_"+boxes_possible[i]].add(track_id)
-            #         other_boxes = [box for box in boxes_possible if box != boxes_possible[i]]
-            #         for j in range(len(other_boxes)):
-            #             if track_id in globals()["area"+"_"+other_boxes[j]]:
-            #                 globals()["area"+"_"+other_boxes[j]].remove(track_id)
-            #                 route_dict[boxes_possible[j]+other_boxes[i]] += 1
+            
             for i in range(len(total_boxes)):         
                 if globals()["result"+"_"+boxes_possible[i]] > 0:
                     if track_id not in globals()["area"+"_"+boxes_possible[i]]:
@@ -222,3 +344,6 @@ for box in required_coords:
 for video in Videos:
     Get_outputs(video)
         
+
+
+
